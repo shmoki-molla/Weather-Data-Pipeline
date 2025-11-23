@@ -1,0 +1,14 @@
+services:
+    ch_server:
+        image: clickhouse/clickhouse-server:24.8.4
+        ports:
+            - "8123:8123"
+        environment:
+            CLICKHOUSE_USER: click
+            CLICKHOUSE_PASSWORD: click
+        networks:
+            - airflow-spark-net
+
+networks:
+  airflow-spark-net:
+    external: true

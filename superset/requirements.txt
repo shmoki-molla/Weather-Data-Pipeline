@@ -1,0 +1,5 @@
+clickhouse-driver==0.2.6
+clickhouse-sqlalchemy==0.2.6
+#sqlalchemy-clickhouse==0.1.5.post0
+zstd==1.5.5.1
+psycopg2-binary==2.9.9
