@@ -31,8 +31,8 @@ def fetch_weather_to_kafka():
 
         # Создаём продюсера Kafka
         producer = KafkaProducer(
-            bootstrap_servers='kafka:9092',  # Адрес Kafka из вашего docker-compose
-            value_serializer=lambda v: json.dumps(v).encode('utf-8')  # Сериализация JSON в байты
+            bootstrap_servers='kafka:9092',  
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')  
         )
 
         # Запрашиваем погоду для каждого города
@@ -40,7 +40,7 @@ def fetch_weather_to_kafka():
             url = API_URL.format(city=city, api_key=API_KEY)
             logger.info(f"Fetching weather for {city}")
             response = requests.get(url)
-            response.raise_for_status()  # Проверяем, что запрос успешен
+            response.raise_for_status()  
 
             weather_data = response.json()
             logger.info(f"Weather data for {city}: {weather_data}")
@@ -59,11 +59,11 @@ def fetch_weather_to_kafka():
         raise
 
 
-# Определяем DAG
+
 with DAG(
         'producer_api_test_dag',
         default_args=default_args,
-        schedule_interval=None,  # Запуск вручную для теста
+        schedule_interval=timedelta(hours=1),  
         catchup=False,
         tags=['kafka', 'api', 'test']
 ) as dag:

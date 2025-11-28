@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# === Параметры ===
+# Параметры 
 HOST = "host.docker.internal"
 PORT = 5435
 USER = "dwh"
@@ -23,7 +23,7 @@ default_args = {
 
 def create_db_and_table():
     try:
-        # 1. Подключаемся к дефолтной БД (postgres) под dwh
+        # Подключение к Postgres
         conn = psycopg2.connect(
             host=HOST,
             port=PORT,
@@ -34,7 +34,7 @@ def create_db_and_table():
         conn.autocommit = True
         cur = conn.cursor()
 
-        # 2. Создаём БД, если нет
+        # Создаём БД, если нет
         cur.execute(f"SELECT 1 FROM pg_database WHERE datname = '{DB_NAME}'")
         if not cur.fetchone():
             logger.info(f"Creating database: {DB_NAME}")
@@ -45,7 +45,7 @@ def create_db_and_table():
         cur.close()
         conn.close()
 
-        # 3. Подключаемся к новой БД и создаём таблицу
+        # Подключаемся к новой БД и создаём таблицу
         conn = psycopg2.connect(
             host=HOST,
             port=PORT,

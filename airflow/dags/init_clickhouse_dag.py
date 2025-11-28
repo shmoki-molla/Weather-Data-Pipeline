@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Clickhouse параметры
 CLICKHOUSE_PARAMS = {
     "host": "ch_server",
     "port": 8123,
@@ -26,7 +27,7 @@ def create_clickhouse_tables():
 
     logger.info("Creating ClickHouse tables...")
 
-    # 1. tracking table
+    # Таблица для трекинга
     client.command("""
         CREATE TABLE IF NOT EXISTS weather_offset_tracker (
             table_name String,
@@ -36,12 +37,12 @@ def create_clickhouse_tables():
         ORDER BY table_name
     """)
 
-    # ensure initial row exists
+    # Проверка существования начальной строки
     res = client.query("SELECT count() FROM weather_offset_tracker WHERE table_name='weather_data'").result_rows
     if res[0][0] == 0:
         client.command("INSERT INTO weather_offset_tracker VALUES ('weather_data', 0)")
 
-    # 2. daily mart
+    #  daily mart
     client.command("""
         CREATE TABLE IF NOT EXISTS weather_city_daily (
             date Date,
@@ -57,7 +58,7 @@ def create_clickhouse_tables():
         ORDER BY (date, city)
     """)
 
-    # 3. hourly mart
+    #  hourly mart
     client.command("""
         CREATE TABLE IF NOT EXISTS weather_city_hourly (
             hour DateTime,

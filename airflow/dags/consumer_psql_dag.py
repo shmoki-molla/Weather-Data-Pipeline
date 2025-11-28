@@ -18,7 +18,7 @@ default_args = {
     'start_date': datetime(2025, 10, 26)
 }
 
-# === PostgreSQL настройки (те же, что в init_database_test_dag.py) ===
+# PostgreSQL параметры
 PG_URL = "jdbc:postgresql://host.docker.internal:5435/weather_database"
 PG_USER = "dwh"
 PG_PASSWORD = "dwh"
@@ -34,7 +34,7 @@ def spark_streaming_weather():
         if os.path.exists(checkpoint_dir):
             shutil.rmtree(checkpoint_dir)
 
-        # === SparkSession ===
+        # SparkSession 
         spark = (
             SparkSession.builder
                 .appName("Airflow_Spark_Streaming_Weather_To_DB")
@@ -57,7 +57,7 @@ def spark_streaming_weather():
 
         logger.info(f"Spark version: {spark.version}")
 
-        # === схема JSON ===
+        # схема JSON 
         schema = StructType([
             StructField("coord", StructType([
                 StructField("lon", FloatType()),
@@ -97,7 +97,7 @@ def spark_streaming_weather():
             StructField("cod", IntegerType())
         ])
 
-        # === Kafka consumer group ===
+        # Kafka consumer group 
         group_id = f"spark-weather-{uuid.uuid4()}"
 
         df = (
@@ -127,7 +127,7 @@ def spark_streaming_weather():
             col("offset")
         )
 
-        # === Функция записи в PostgreSQL ===
+        # Функция записи в PostgreSQL 
         def write_to_db(batch_df, batch_id):
             logger.info(f"Writing batch {batch_id} to PostgreSQL")
 
@@ -143,7 +143,7 @@ def spark_streaming_weather():
 
             logger.info(f"Batch {batch_id} written successfully")
 
-        # === Запуск стриминга ===
+        # Запуск стриминга 
         query = (
             processed_df.writeStream
                 .outputMode("append")
@@ -166,7 +166,7 @@ def spark_streaming_weather():
 with DAG(
         'consumer_to_db',
         default_args=default_args,
-        schedule_interval=None,
+        schedule_interval=timedelta(hours=1),
         catchup=False,
         tags=['spark', 'kafka', 'postgres', 'test']
 ) as dag:

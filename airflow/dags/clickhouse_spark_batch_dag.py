@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# ClickHouse params
+# ClickHouse параметры подключения
 CLICKHOUSE_PARAMS = {
     "host": "ch_server",
     "port": 8123,
@@ -17,7 +17,7 @@ CLICKHOUSE_PARAMS = {
     "database": "default"
 }
 
-# Postgres JDBC properties
+# Postgres JDBC параметры
 PG_URL = "jdbc:postgresql://host.docker.internal:5435/weather_database"
 PG_USER = "dwh"
 PG_PASSWORD = "dwh"
@@ -31,7 +31,7 @@ default_args = {
 
 def spark_batch_etl_to_clickhouse():
 
-    # 1. Start Spark
+    # 1. Запуск Spark
     spark = (
         SparkSession.builder
             .appName("Weather_Batch_ETL_to_ClickHouse")
@@ -42,7 +42,7 @@ def spark_batch_etl_to_clickhouse():
 
     spark.sparkContext.setLogLevel("WARN")
 
-    # 2. Read last offset from ClickHouse
+    # 2. Читаем последний offset из ClickHouse
     ch = clickhouse_connect.get_client(**CLICKHOUSE_PARAMS)
 
     last_offset = ch.query("""
@@ -53,7 +53,7 @@ def spark_batch_etl_to_clickhouse():
 
     logger.info(f"LAST OFFSET in ClickHouse = {last_offset}")
 
-    # 3. Load new rows from PostgreSQL via Spark JDBC
+    # 3. Загружаем новые строки из Postgres
     df = (
         spark.read
         .format("jdbc")
@@ -78,7 +78,7 @@ def spark_batch_etl_to_clickhouse():
     df = df.withColumn("timestamp", col("timestamp").cast("timestamp"))
 
     # =========================================
-    # 4. DAILY MART (Spark version)
+    # 4. DAILY MART 
     # =========================================
     daily = (
         df.groupBy(to_date(col("timestamp")).alias("date"), col("city"))
@@ -112,18 +112,18 @@ def spark_batch_etl_to_clickhouse():
             )
     )
 
-    # Convert Spark DF → Pandas for ClickHouse insert
+    # Конвертируем Dataframe в Pandas-формат
     daily_pd = daily.toPandas()
     hourly_pd = hourly.toPandas()
 
     # =========================================
-    # 6. Insert into ClickHouse
+    # 6. Загружаем в Clickhouse
     # =========================================
     ch.insert_df("weather_city_daily", daily_pd)
     ch.insert_df("weather_city_hourly", hourly_pd)
 
     # =========================================
-    # 7. Update Offset tracker
+    # 7. Обновляем offset-трекер
     # =========================================
     ch.command(f"""
         ALTER TABLE weather_offset_tracker
@@ -139,7 +139,7 @@ def spark_batch_etl_to_clickhouse():
 with DAG(
     "load_weather_to_clickhouse_spark_dag",
     default_args=default_args,
-    schedule_interval=None,
+    schedule_interval=timedelta(hours=2),
     catchup=False,
     tags=["spark", "postgres", "clickhouse", "etl"],
 ) as dag:
